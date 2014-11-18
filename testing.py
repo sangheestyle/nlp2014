@@ -50,7 +50,7 @@ if __name__ == "__main__":
     t = {}
     d = DictReader(open("test.csv"))
     writing_file = open("results.csv",'w')
-    fieldnames = ['Question ID','Sentence Position','Answer']
+    fieldnames = ['Question ID','Answer']
     dw = DictWriter(writing_file, delimiter=',', fieldnames=fieldnames)
     dw.writerow(dict((fn,fn) for fn in fieldnames))
     answer = ""
@@ -69,7 +69,6 @@ if __name__ == "__main__":
         if overlap_flag != 0:
             if sorted_qd[0][0] == sorted_wd[0][0]:
                 answer = sorted_qd[0][0]
-                continue
             else:
                 count = 1
                 for a1 in sorted_qd:
@@ -78,7 +77,7 @@ if __name__ == "__main__":
                             answer = a1[0]
         else:
             answer = sorted_qd[0][0]
-        dw.writerow({'Question ID':q['Question ID'],'Sentence Position':q['Sentence Position'], 'Answer':answer})
+        dw.writerow({'Question ID':q['Question ID'],'Answer':answer})
         #print answer, h
     #validate("example.csv", "results.csv")
     
