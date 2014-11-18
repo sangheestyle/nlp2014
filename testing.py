@@ -72,10 +72,16 @@ if __name__ == "__main__":
             else:
                 count = 1
                 for a1 in sorted_qd:
+                    if count > 5:
+                        break
                     for a2 in sorted_wd:
+                        if count > 5:
+                            break
                         if a1[0] == a2[0]:
                             answer = a1[0]
         else:
+            answer = sorted_qd[0][0]
+        if answer == "":
             answer = sorted_qd[0][0]
         dw.writerow({'Question ID':q['Question ID'],'Answer':answer})
         #print answer, h
