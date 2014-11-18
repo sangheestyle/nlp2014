@@ -1,6 +1,7 @@
 from collections import defaultdict
 from csv import DictReader, DictWriter
 
+import operator
 import nltk
 from nltk.corpus import wordnet as wn
 from nltk.tokenize import TreebankWordTokenizer
@@ -13,6 +14,7 @@ def validate(f1,f2):
     dw = DictWriter(writing_file, delimiter=',', fieldnames=fieldnames)
     dw.writerow(dict((fn,fn) for fn in fieldnames))
     matches = 0.0
+    misses = 0.0
     d1 = []
     d2 = []
     c = 0.0
@@ -24,18 +26,13 @@ def validate(f1,f2):
     for q1 in d1:
         for q2 in d2:
             if q1['Question ID'] == q2['Question ID'] and q1['Sentence Position'] == q2['Sentence Position']:
-                if q1['Answer'] != q2 ['Answer']:
+                if q1['Answer'] == q2 ['Answer']:
                     matches += 1.0
-                    dw.writerow({'Question ID':q1['Question ID'], 'Sentence Position': q1['Sentence Position'], 'Answer':q1['Answer'], 'QANTA Scores':q1['QANTA Scores'],'IR_Wiki Scores':q1['IR_Wiki Scores'],'Question Text':q1['Question Text']})
-                    qdict = form_dict(q1['QANTA Scores'])
-                    wdict = form_dict(q1['IR_Wiki Scores'])
-                    if q1['Answer'] not in qdict and q1['Answer'] not in wdict:
-                        outofset += 1.0
-                        print q1['Question ID'],"\t",q1['Sentence Position']
         c += 1.0
-    print matches/c
-    print outofset," questions out of the set!",c
-    print outofset/c," of the questions are out of the set!"
+    print "Total number of questions =",int(c)
+    print '%.2f' %(matches/c * 100.0),"% of correct answers are the top QANTA answer."
+    #print outofset," incorrect selections are out of the set!"
+    #print '%.2f' % (outofset/c * 100.0),"% of the incorrect selections are out of the set!"
     
 
 def form_dict(vals):
@@ -48,23 +45,40 @@ def form_dict(vals):
 if __name__ == "__main__":
 
 
-    validate("train.csv","results.csv")
-    """
+    #validate("train.csv","results.csv")
+    
     t = {}
-    d = DictReader(open("train.csv"))
+    d = DictReader(open("test.csv"))
     writing_file = open("results.csv",'w')
-    fieldnames = ['Question ID','Sentence Position','Answer','QANTA Scores','Question Text']
+    fieldnames = ['Question ID','Sentence Position','Answer']
     dw = DictWriter(writing_file, delimiter=',', fieldnames=fieldnames)
     dw.writerow(dict((fn,fn) for fn in fieldnames))
+    answer = ""
     for q in d:
         values = form_dict(q['QANTA Scores'])
-        h = 0
-        answer = ""
-        for v in values:
-            if values[v] > h:
-                h = values[v]
-                answer = v
-        dw.writerow({'Question ID':q['Question ID'],'Sentence Position':q['Sentence Position'], 'Answer':answer, 'QANTA Scores':q['QANTA Scores'],'Question Text':q['Question Text']})
+        qd = form_dict(q['QANTA Scores'])
+        wd = form_dict(q['IR_Wiki Scores'])
+        sorted_qd = sorted(qd.items(), key=operator.itemgetter(1), reverse=True)
+        sorted_wd = sorted(wd.items(), key=operator.itemgetter(1), reverse=True)
+        overlap_flag = 0
+        
+        for a in qd:
+            if a in wd:
+                overlap_flag = 1
+                break
+        if overlap_flag != 0:
+            if sorted_qd[0][0] == sorted_wd[0][0]:
+                answer = sorted_qd[0][0]
+                continue
+            else:
+                count = 1
+                for a1 in sorted_qd:
+                    for a2 in sorted_wd:
+                        if a1[0] == a2[0]:
+                            answer = a1[0]
+        else:
+            answer = sorted_qd[0][0]
+        dw.writerow({'Question ID':q['Question ID'],'Sentence Position':q['Sentence Position'], 'Answer':answer})
         #print answer, h
     #validate("example.csv", "results.csv")
-    """
+    

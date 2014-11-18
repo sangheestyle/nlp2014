@@ -23,22 +23,17 @@ if __name__ == "__main__":
     matchedtop = 0
     ansmatchtop = 0
     overlap = 0
+    answer = ""
     for q in d:
         c += 1
         answer = q['Answer']
         qd = form_dict(q['QANTA Scores'])
         wd = form_dict(q['IR_Wiki Scores'])
-        if answer in qd or answer in wd:
-            overlap += 1
-        count = 0.0
-        for v in qd:
-            if v in wd:
-                count += 1.0
-        totaloverlap += (count/20.0)
-        if count < 1.0:
-            nooverlap += 1
-        sorted_qd = sorted(qd.items(), key=operator.itemgetter(1), reverse=True)
-        sorted_wd = sorted(wd.items(), key=operator.itemgetter(1), reverse=True)
+        if answer in qd and answer in wd:
+            sorted_qd = sorted(qd.items(), key=operator.itemgetter(1), reverse=True)
+            sorted_wd = sorted(wd.items(), key=operator.itemgetter(1), reverse=True)
+            if sorted_qd[0]
+        
         part_qd = sorted_qd[:5]
         part_wd = sorted_wd[:5]
         if sorted_qd[0][0] == sorted_wd[0][0]:
@@ -57,8 +52,9 @@ if __name__ == "__main__":
         #if c == 2:
         #    break
         #print "@@@@@@@@@@@@@@@@"
-    print '%.2f' % (float(ansmatchtop/float(matchedtop)) * 100.0),"%"
-    print '%.2f' % (float(matchedtop)/float(c) * 100.0),"%"
-    print '%.2f' % (totaloverlap/float(c-nooverlap)* 100.0),"%"
-    print '%.2f' % (float(amongtop)/float(c) * 100.0),"%"
-    print '%.2F' % (float(overlap)/float(c) * 100.0),"%"
+
+    print '%.2f' % (float(matchedtop)/float(c) * 100.0),"% of questions, the top (one) guess matches in QANTA and IR_Wiki."
+    print "When best guess matches in QANTA and IR_Wiki,",'%.2f' % (float(ansmatchtop/float(matchedtop)) * 100.0),"% of these answers are correct."
+    #print '%.2f' % (totaloverlap/float(c-nooverlap)* 100.0),"%"
+    print '%.2f' % (float(amongtop)/float(c) * 100.0),"% of the time, the correct answer is among the top 5 of either model."
+    print "There is",'%.2F' % (float(overlap)/float(c) * 100.0),"% overlapping between two models (at least one guess is in both models)."
