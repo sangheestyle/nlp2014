@@ -9,12 +9,7 @@ from nltk.tokenize import TreebankWordTokenizer
 def validate(f1,f2):
     df1 = DictReader(open(f1))
     df2 = DictReader(open(f2))
-    writing_file = open("misses.csv",'w')
-    fieldnames = ['Question ID','Sentence Position','Answer','QANTA Scores','IR_Wiki Scores','Question Text']
-    dw = DictWriter(writing_file, delimiter=',', fieldnames=fieldnames)
-    dw.writerow(dict((fn,fn) for fn in fieldnames))
     matches = 0.0
-    misses = 0.0
     d1 = []
     d2 = []
     c = 0.0
@@ -30,10 +25,8 @@ def validate(f1,f2):
                     matches += 1.0
         c += 1.0
     print "Total number of questions =",int(c)
-    print '%.2f' %(matches/c * 100.0),"% of correct answers are the top QANTA answer."
-    #print outofset," incorrect selections are out of the set!"
-    #print '%.2f' % (outofset/c * 100.0),"% of the incorrect selections are out of the set!"
-    
+    print '%.2f' %(matches/c * 100.0),"% of selections are correct."
+
 
 def form_dict(vals):
     d = defaultdict(float)
@@ -53,15 +46,16 @@ if __name__ == "__main__":
     fieldnames = ['Question ID','Answer']
     dw = DictWriter(writing_file, delimiter=',', fieldnames=fieldnames)
     dw.writerow(dict((fn,fn) for fn in fieldnames))
-    answer = ""
+    
+
     for q in d:
-        values = form_dict(q['QANTA Scores'])
+        answer = ""
         qd = form_dict(q['QANTA Scores'])
         wd = form_dict(q['IR_Wiki Scores'])
         sorted_qd = sorted(qd.items(), key=operator.itemgetter(1), reverse=True)
         sorted_wd = sorted(wd.items(), key=operator.itemgetter(1), reverse=True)
         overlap_flag = 0
-        
+        sp = int(q['Sentence Position'])
         for a in qd:
             if a in wd:
                 overlap_flag = 1
@@ -72,18 +66,19 @@ if __name__ == "__main__":
             else:
                 count = 1
                 for a1 in sorted_qd:
-                    if count > 5:
+                    if count > (5-sp) or answer != "":
                         break
+                    c = 1
                     for a2 in sorted_wd:
-                        if count > 5:
+                        if c > (10-sp):
                             break
                         if a1[0] == a2[0]:
                             answer = a1[0]
+                            break
+                        c += 1
+                    count += 1
         else:
             answer = sorted_qd[0][0]
         if answer == "":
             answer = sorted_qd[0][0]
         dw.writerow({'Question ID':q['Question ID'],'Answer':answer})
-        #print answer, h
-    #validate("example.csv", "results.csv")
-    
