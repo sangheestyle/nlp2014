@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
 
     #validate("train.csv","results.csv")
-    
+     
     t = {}
     d = DictReader(open("test.csv"))
     writing_file = open("results.csv",'w')
@@ -66,11 +66,11 @@ if __name__ == "__main__":
             else:
                 count = 1
                 for a1 in sorted_qd:
-                    if count > (5-sp) or answer != "":
+                    if count > (20-2*sp) or answer != "":
                         break
                     c = 1
                     for a2 in sorted_wd:
-                        if c > (10-sp):
+                        if c > 1:
                             break
                         if a1[0] == a2[0]:
                             answer = a1[0]
@@ -82,3 +82,7 @@ if __name__ == "__main__":
         if answer == "":
             answer = sorted_qd[0][0]
         dw.writerow({'Question ID':q['Question ID'],'Answer':answer})
+    
+    
+
+    
