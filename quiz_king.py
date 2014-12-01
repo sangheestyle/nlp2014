@@ -50,6 +50,7 @@ if __name__ == "__main__":
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.naive_bayes import GaussianNB
     from sklearn.linear_model import SGDClassifier
+    from sklearn.kernel_approximation import RBFSampler
 
     train_path = sys.argv[1]
     test_path = sys.argv[2]
@@ -72,6 +73,9 @@ if __name__ == "__main__":
 
     # clf = GaussianNB()
     clf = SGDClassifier()
+    rbf_feature = RBFSampler(gamma=1, random_state=1)
+    q_train_set = rbf_feature.fit_transform(q_train_set)
+
     clf.fit(q_train_set, ans_train_set)
 
     assert len(q_test_set) == len(test_set), "Check number of train set"
@@ -81,6 +85,7 @@ if __name__ == "__main__":
 
     with open(output_path, "wb") as out_file:
         o = csv.DictWriter(out_file, output_header)
+        o.writeheader()
         total = len(train_set)
         for idx, qq in enumerate(q_test_set):
             q_id = test_set.corpus[idx]['Question ID']
