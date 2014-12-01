@@ -63,7 +63,7 @@ if __name__ == "__main__":
     test_set.read(test_path)
 
     print ">>> Vectorizing..."
-    vectorizer = TfidfVectorizer(stop_words='english')
+    vectorizer = TfidfVectorizer(stop_words='english', ngram_range=(1, 2))
     q_train_set = train_set.get_field('Question Text')
     q_test_set = test_set.get_field('Question Text')
     vectors = vectorizer.fit_transform(q_train_set+q_test_set).todense()
