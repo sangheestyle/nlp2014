@@ -1,6 +1,9 @@
 import csv
 from collections import defaultdict
 
+from nltk import word_tokenize
+from nltk.stem import WordNetLemmatizer
+
 
 class Corpus:
     """
@@ -44,6 +47,15 @@ class Corpus:
         return d
 
 
+class LemmaTokenizer(object):
+    def __init__(self):
+        self.wnl = WordNetLemmatizer()
+
+    def __call__(self, doc):
+        # TODO: need to remove punctuations if it requires
+        return [self.wnl.lemmatize(t) for t in word_tokenize(doc)]
+
+
 if __name__ == "__main__":
     import sys
     import os
@@ -63,9 +75,11 @@ if __name__ == "__main__":
     test_set.read(test_path)
 
     print ">>> Vectorizing..."
-    vectorizer = TfidfVectorizer(stop_words='english', ngram_range=(1, 2))
     q_train_set = train_set.get_field('Question Text')
     q_test_set = test_set.get_field('Question Text')
+    vectorizer = TfidfVectorizer(stop_words='english',
+                                 ngram_range=(1, 2),
+                                 tokenizer=LemmaTokenizer())
     vectors = vectorizer.fit_transform(q_train_set+q_test_set).todense()
     q_train_set = vectors[:len(q_train_set)]
     q_test_set = vectors[len(q_train_set):]
