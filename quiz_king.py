@@ -49,8 +49,6 @@ if __name__ == "__main__":
     import os
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.naive_bayes import GaussianNB
-    from sklearn.linear_model import SGDClassifier
-    from sklearn.kernel_approximation import RBFSampler
 
     train_path = sys.argv[1]
     test_path = sys.argv[2]
@@ -64,7 +62,7 @@ if __name__ == "__main__":
     test_set = Corpus()
     test_set.read(test_path)
 
-    print ">>> TfidfVectorizing..."
+    print ">>> Vectorizing..."
     vectorizer = TfidfVectorizer(stop_words='english')
     q_train_set = train_set.get_field('Question Text')
     q_test_set = test_set.get_field('Question Text')
@@ -74,11 +72,7 @@ if __name__ == "__main__":
     ans_train_set = train_set.get_field('Answer')
 
     print ">>> Training classifier..."
-    # clf = GaussianNB()
-    clf = SGDClassifier()
-    rbf_feature = RBFSampler(gamma=1, random_state=1)
-    q_train_set = rbf_feature.fit_transform(q_train_set)
-
+    clf = GaussianNB()
     clf.fit(q_train_set, ans_train_set)
 
     assert len(q_test_set) == len(test_set), "Check number of train set"
