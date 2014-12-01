@@ -7,7 +7,7 @@ from nltk.corpus import wordnet as wn
 from nltk.tokenize import TreebankWordTokenizer
 
 kTOKENIZER = TreebankWordTokenizer()
-TOPGUESSES = 2
+TOPGUESSES = 20
 def morphy_stem(word):
     """
     Simple stemmer
@@ -78,16 +78,16 @@ class FeatureExtractor:
         for g in qd:
             if g in wd:
                 d['Overlap'] += 1
-                break
+                
         
         sorted_qd = sorted(qd.items(), key=operator.itemgetter(1), reverse=True)
         sorted_wd = sorted(wd.items(), key=operator.itemgetter(1), reverse=True)
         
-        #for qg in xrange(TOPGUESSES/2):
-        if sorted_qd[0][0] == sorted_wd[0][0]:
-            d['Top Overlap'] = 1
+        for qg in xrange(TOPGUESSES):
+            if sorted_qd[qg][0] == sorted_wd[0][0]:
+                d['Top Overlap'] += 20-qg
         
-        d['Sentence Position'] = dict['Sentence Position']
+        d['Sentence Position'] = int(dict['Sentence Position'])
         
         return d
 
@@ -156,11 +156,11 @@ if __name__ == "__main__":
         sorted_wd = sorted(wd.items(), key=operator.itemgetter(1), reverse=True)
         test[ii['Question ID']] = classifier.classify(fe.features(dict))
         rank = int(test[ii['Question ID']])
+        #print rank
         if rank < 0:
             test[ii['Question ID']] = sorted_qd[0][0]
         else:
-            ans = get_answer(sorted_qd, sorted_qd, TOPGUESSES, rank)
-            test[ii['Question ID']] = ans
+            test[ii['Question ID']] = get_answer(sorted_qd, sorted_qd, TOPGUESSES, rank)
 
     # Write predictions
     o = DictWriter(open('pred.csv', 'w'), ['Question ID', 'Answer'])
