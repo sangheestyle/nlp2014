@@ -47,10 +47,18 @@ class Corpus:
             d[key.strip()] = float(val)
         return d
 
-    def train_test_split(self, portion=0.015):
-        test_set = sample(self._corpus, int(len(self._corpus)*portion))
+    def train_test_split(self, portion=0.015, random=False):
+        num_test_set = int(len(self._corpus)*portion)
+        if random:
+            test_set = sample(self._corpus, num_test_set)
+        else:
+            test_set = [ii for ii in self._corpus
+                        if int(ii['Question ID']) % 5 == 0]
+            assert num_test_set <= len(test_set),\
+                   "Given portion is too high: %r" % portion
+            test_set = test_set[:num_test_set]
         test_qid = set(ii['Question ID'] for ii in test_set)
-        train_set = [qq for qq in self._corpus \
+        train_set = [qq for qq in self._corpus
                      if qq['Question ID'] not in test_qid]
         return train_set, test_set
 
