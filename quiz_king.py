@@ -49,6 +49,7 @@ if __name__ == "__main__":
     import os
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.naive_bayes import GaussianNB
+    from sklearn.linear_model import SGDClassifier
 
     train_path = sys.argv[1]
     test_path = sys.argv[2]
@@ -69,7 +70,8 @@ if __name__ == "__main__":
     q_test_set = vectors[len(q_train_set):]
     ans_train_set = train_set.get_field('Answer')
 
-    clf = GaussianNB()
+    # clf = GaussianNB()
+    clf = SGDClassifier()
     clf.fit(q_train_set, ans_train_set)
 
     assert len(q_test_set) == len(test_set), "Check number of train set"
@@ -79,7 +81,6 @@ if __name__ == "__main__":
 
     with open(output_path, "wb") as out_file:
         o = csv.DictWriter(out_file, output_header)
-        o.writeheader()
         total = len(train_set)
         for idx, qq in enumerate(q_test_set):
             q_id = test_set.corpus[idx]['Question ID']
