@@ -1,5 +1,6 @@
 import csv
 from collections import defaultdict
+from random import sample
 
 from nltk import word_tokenize
 from nltk.stem import WordNetLemmatizer
@@ -46,6 +47,13 @@ class Corpus:
             d[key.strip()] = float(val)
         return d
 
+    def train_test_split(self, portion=0.015):
+        test_set = sample(self._corpus, int(len(self._corpus)*portion))
+        test_qid = set(ii['Question ID'] for ii in test_set)
+        train_set = [qq for qq in self._corpus \
+                     if qq['Question ID'] not in test_qid]
+        return train_set, test_set
+
 
 class LemmaTokenizer(object):
     def __init__(self):
@@ -84,6 +92,28 @@ if __name__ == "__main__":
     q_train_set = vectors[:len(q_train_set)]
     q_test_set = vectors[len(q_train_set):]
     ans_train_set = train_set.get_field('Answer')
+
+    print ">>> Benchmark..."
+    train_bench, test_bench = train_set.train_test_split()
+    test_bench_q = [ii['Question Text'] for ii in test_bench]
+    test_bench_a = [ii['Answer'] for ii in test_bench]
+    train_bench_q = [ii['Question Text'] for ii in train_bench]
+    train_bench_a = [ii['Answer'] for ii in train_bench]
+    vectors_bench = vectorizer.fit_transform(train_bench_q+test_bench_q).todense()
+    train_bench_q = vectors_bench[:len(train_bench_q)]
+    test_bench_q = vectors_bench[len(train_bench_q):]
+
+    clf_bench = GaussianNB()
+    clf_bench.fit(train_bench_q, train_bench_a)
+    right = 0
+    total = len(test_bench_q)
+    print "Number of benchmark: ", total
+    for idx, ii in enumerate(test_bench_q):
+        prediction = clf_bench.predict(ii)[0]
+        print test_bench_a[idx] == prediction, test_bench_a[idx], prediction
+        if prediction == test_bench_a[idx]:
+            right += 1
+    print("Accuracy on dev: %f" % (float(right) / float(total)))
 
     print ">>> Training classifier..."
     clf = GaussianNB()
