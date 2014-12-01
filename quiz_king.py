@@ -58,11 +58,13 @@ if __name__ == "__main__":
     assert os.path.exists(train_path), "Path is wrong: %r" % train_path
     assert os.path.exists(test_path), "Path is wrong: %r" % test_path
 
+    print ">>> Processing corpus for train and test set."
     train_set = Corpus()
     train_set.read(train_path)
     test_set = Corpus()
     test_set.read(test_path)
 
+    print ">>> TfidfVectorizing..."
     vectorizer = TfidfVectorizer(stop_words='english')
     q_train_set = train_set.get_field('Question Text')
     q_test_set = test_set.get_field('Question Text')
@@ -71,6 +73,7 @@ if __name__ == "__main__":
     q_test_set = vectors[len(q_train_set):]
     ans_train_set = train_set.get_field('Answer')
 
+    print ">>> Training classifier..."
     # clf = GaussianNB()
     clf = SGDClassifier()
     rbf_feature = RBFSampler(gamma=1, random_state=1)
@@ -83,6 +86,7 @@ if __name__ == "__main__":
     output_header = ['Question ID', 'Answer']
     num_test = len(test_set)
 
+    print ">>> Asking answer..."
     with open(output_path, "wb") as out_file:
         o = csv.DictWriter(out_file, output_header)
         o.writeheader()
