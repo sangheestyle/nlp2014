@@ -4,6 +4,8 @@ from random import sample
 
 from nltk import word_tokenize
 from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import TreebankWordTokenizer
+from nltk.corpus import wordnet
 
 
 class Corpus:
@@ -47,13 +49,13 @@ class Corpus:
             d[key.strip()] = float(val)
         return d
 
-    def train_test_split(self, portion=0.015, random=False):
+    def train_test_split(self, portion=0.020, random=False):
         num_test_set = int(len(self._corpus)*portion)
         if random:
             test_set = sample(self._corpus, num_test_set)
         else:
             test_set = [ii for ii in self._corpus
-                        if int(ii['Question ID']) % 5 == 0]
+                        if int(ii['Question ID']) % 50 == 0]
             assert num_test_set <= len(test_set),\
                    "Given portion is too high: %r" % portion
             test_set = test_set[:num_test_set]
@@ -63,13 +65,28 @@ class Corpus:
         return train_set, test_set
 
 
-class LemmaTokenizer(object):
+class LemmaTokenizer:
     def __init__(self):
         self.wnl = WordNetLemmatizer()
 
     def __call__(self, doc):
         # TODO: need to remove punctuations if it requires
         return [self.wnl.lemmatize(t) for t in word_tokenize(doc)]
+
+
+class MorphyStemmer:
+    def __init__(self):
+        self.tokenizer = TreebankWordTokenizer()
+
+    def __call__(self, doc):
+        stemmed_doc = []
+        for t in self.tokenizer.tokenize(doc):
+            stem = wordnet.morphy(t)
+            if stem:
+                stemmed_doc.append(stem.lower())
+            else:
+                stemmed_doc.append(t.lower())
+        return stemmed_doc
 
 
 if __name__ == "__main__":
@@ -93,9 +110,11 @@ if __name__ == "__main__":
     print ">>> Vectorizing..."
     q_train_set = train_set.get_field('Question Text')
     q_test_set = test_set.get_field('Question Text')
+    # vectorizer = TfidfVectorizer(stop_words='english')
     vectorizer = TfidfVectorizer(stop_words='english',
                                  ngram_range=(1, 2),
-                                 tokenizer=LemmaTokenizer())
+                                 use_idf=True,
+                                 tokenizer=MorphyStemmer())
     vectors = vectorizer.fit_transform(q_train_set+q_test_set).todense()
     q_train_set = vectors[:len(q_train_set)]
     q_test_set = vectors[len(q_train_set):]
