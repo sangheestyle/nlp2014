@@ -29,9 +29,10 @@ def form_dict(vals):
 
 def compose_top_scores(qt_dict, ir_dict, n):
     """
+        DISCARDED !!!
         Given two sets of guesses, this will return a dictionaty containing
         the n top guesses of the two models
-        """
+    """
     h = n - (n/2)
     top_guesses = {}
     for i in xrange(h):

@@ -1,13 +1,21 @@
 from collections import defaultdict
 from csv import DictReader, DictWriter
 
+import os
 import operator
 import nltk
+from nltk.corpus import stopwords
+from nltk.util import *
 from nltk.corpus import wordnet as wn
 from nltk.tokenize import TreebankWordTokenizer
+from nltk.corpus.reader.conll import ConllCorpusReader
 
 kTOKENIZER = TreebankWordTokenizer()
 TOPGUESSES = 40
+PUNC = ['-',',','.',':',';','\'','\"','?','!']
+COLUMN_TYPES = ('words', 'pos', 'tree', 'chunk', 'ne', 'srl', 'ignore')
+
+
 def morphy_stem(word):
     """
     Simple stemmer
@@ -80,54 +88,118 @@ class FeatureExtractor:
         qd = form_dict(dict['QANTA Scores'])
         wd = form_dict(dict['IR_Wiki Scores'])
         sp = int(dict['Sentence Position'])
-    
-    
-    
+        qtext = dict['Question Text']
+        list_words = []
         
         sorted_qd = sorted(qd.items(), key=operator.itemgetter(1), reverse=True)
         sorted_wd = sorted(wd.items(), key=operator.itemgetter(1), reverse=True)
         overlap = 0
+        consider_qanta = 0
+        """
+        if sorted_qd[0][0] == sorted_wd[0][0] and sorted_qd[0][1] > 0.5:
+            consider_qanta = 1
+        """
         
+        for w in kTOKENIZER.tokenize(qtext):
+            if consider_qanta != 0:
+                break
+            if morphy_stem(w) not in stopwords.words('english') and w[0] not in PUNC:
+                list_words.append(morphy_stem(w))
+        #bigrams_qtext = list(bigrams(list_words))
+        trigrams_qtext = list(trigrams(list_words))
+        highest = 0
+        rnk = 0
+        
+        for i in xrange(10):
+            if consider_qanta != 0:
+                break
+            fid = "./wikipedia/"+sorted_qd[i][0][0]+"/"+sorted_qd[i][0]
+            v = 0
+            if os.path.exists(fid):
+                fids = [fid]
+                cr = ConllCorpusReader("", fids, COLUMN_TYPES)
+                c = 0
+                for r in cr.iob_sents():
+                    if c > 3:
+                        break
+                    wiki_words = []
+                    for j in xrange(len(r)):
+                        w = morphy_stem(r[j][1].lower())
+                        if w not in stopwords.words('english') and w[0] not in PUNC:
+                            wiki_words.append(w)
+                
+                    for j in xrange(len(wiki_words)-2):
+                        bgrm = (wiki_words[j],wiki_words[j+1],wiki_words[j+2])
+                        if bgrm in trigrams_qtext:
+                            ky = "Bigrams"+str(i)
+                            d[ky] += TOPGUESSES - i
+                            v += 1
+                            print "QID:",dict['Question ID'],"SP=",sp,"\t", rnk,v, bgrm[0],bgrm[1],bgrm[2]
+                    c += 1
+            if v > highest:
+                highest = v
+                rnk = i
+        d['bigrams'] = rnk
+        """
+        highest = 0
+        rnk = 0
+        qwords = kTOKENIZER.tokenize(qtext)
+        for i in xrange(10):
+            fid = "./wikipedia/"+sorted_qd[i][0][0]+"/"+sorted_qd[i][0]
+            if os.path.exists(fid):
+                fids = [fid]
+                cr = ConllCorpusReader("", fids, COLUMN_TYPES)
+                
+                c = 0
+                v = 0
+                for r in cr.iob_sents():
+                    if c > 4:
+                        break
+                    for j in xrange(len(r)):
+                        if r[j][1].lower() not in stopwords.words('english') and r[j][1][0] not in PUNC and r[j][1].lower() in qwords:
+                            v += 1
+                    
+                    c += 1
+                if v > highest:
+                    highest = v
+                    rnk = i
+        d['unigram'] = rnk
+        """
+
         for qg in xrange(len(sorted_qd)):
             if sorted_qd[qg][0] == sorted_wd[0][0]:
                 overlap = 1
+                d['Top IR Overlap'] += qg
+                """
                 if  (sorted_qd[0][1] - sorted_qd[1][1]) < 0.15:
                     d['Top IR Overlap'] += qg
                 else:
                     d['Top IR Overlap'] -= qg
+                """
                 break
-
-    
+                
         if overlap == 0:
             if sorted_qd[0][1] < 0.05 and sorted_wd[0][1] > 4.0:
                 d['Top IR'] += 1
             if sp == 0 and sorted_qd[0][1] < 0.1:
                 d['Top_IR'] += int(sorted_wd[0][1])
 
-
-        """
-        for rg in xrange(len(sorted_wd)):
-            if sorted_wd[rg][0] == sorted_qd[0][0]:
-                d['Top Q Overlap'] += len(sorted_wd)-rg
-        """
         for i in xrange(4*sp):
             if i < len(sorted_qd) and sorted_qd[i][0] == sorted_wd[i][0]:
                 d['Equal Rank'] += i + 2
-
-        if sorted_qd[0][1] > 0.74:
+        if sorted_qd[0][1] > 0.75:
             d['Q Score'] = 0
         elif sorted_qd[0][1] > 0.39:
             d['Q Score'] = 1
+        elif sorted_qd[0][1] > 0.24:
+            d['Q Score'] = 2
         else:
             d['Q Score'] = -1
-
-
-        if sorted_wd[0][1] > 20.0 and sorted_qd[0][1] < 0.1:
+        if sorted_wd[0][1] > 20.0 and sorted_qd[0][1] < 0.25:
             d['IR Score'] = TOPGUESSES
         
-        d['Guesses vs SP'] = TOPGUESSES - sp
         d['Sentence Position'] = sp
-
+        
         return d
 
 if __name__ == "__main__":
@@ -178,8 +250,6 @@ if __name__ == "__main__":
     classifier = nltk.classify.NaiveBayesClassifier.train(dev_train)
     #classifier = nltk.classify.MaxentClassifier.train(dev_train, 'IIS', trace=3, max_iter=100)
     columns = ['Question ID', 'Question Text', 'Sentence Position','Correct Answer', 'Our Guess', 'QANTA Scores', 'IR_Wiki Scores', 'category']
-    incorrect_stats = DictWriter(open('incorrect_stats', 'w'), columns)
-    incorrect_stats.writeheader()
     """
     right = 0
     total = len(dev_test)
