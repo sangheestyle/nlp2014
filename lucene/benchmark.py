@@ -28,7 +28,10 @@ right = 0
 total = len(test_bench_q)
 print "Number of benchmark: ", total
 for idx, ii in enumerate(test_bench_q):
-    prediction = lp.getTopNSimilarToThis(ii)[0][0]
+    #field = ["wiki_plain"]
+    #field = ["question"]
+    field = ["wiki_plain", "question"]
+    prediction = lp.getTopNSimilarToThis(ii, field)[0][0]
     print test_bench_a[idx] == prediction, test_bench_a[idx], prediction
     if prediction == test_bench_a[idx]:
         right += 1

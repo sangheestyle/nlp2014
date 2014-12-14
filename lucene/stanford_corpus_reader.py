@@ -8,22 +8,26 @@ class StanfordCorpusReader(object):
 
     def __init__(self, root):
         self._root = root
+        self._column_types = ['ignore', 'words', 'ignore',
+                              'ignore', 'ignore']
 
     def get_text(self, keyword):
         """
         Return a complete text of the keyword
         """
-        items = ['ignore', 'words', 'ignore', 'ignore', 'ignore']
-        corpus = self._get_conll_corpus(keyword, items)
+        wiki_path = self._root + "/" + keyword[0] + "/" + keyword
+        corpus = self._get_conll_corpus(wiki_path, self._column_types)
         text = []
-        for ii in corpus.sents():
-            text.append(" ".join(ii))
-        return "\n".join(text)
+        try:
+            for ii in corpus.sents():
+                text.append(" ".join(ii))
+            return "\n".join(text)
+        except:
+            print "Not found", wiki_path
+            return ""
 
-    def _get_conll_corpus(self, keyword, items):
-        keyword_path = keyword[0] + "/" + keyword
-        corpus = ConllCorpusReader(self._root, keyword_path,
-                                   items, encoding='utf=8')
+    def _get_conll_corpus(self, wiki_path, column_types):
+        corpus = ConllCorpusReader("", wiki_path, column_types)
         return corpus
 
 

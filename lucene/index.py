@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 
 INDEX_DIR = "index_knowledge.index"
+WIKI_ROOT= "wikipedia"
 
 import sys, os, lucene, threading, time, json
 from datetime import datetime
-
-from corpus import Corpus
 
 from java.io import File
 from org.apache.lucene.analysis.miscellaneous import LimitTokenCountAnalyzer
@@ -14,6 +13,9 @@ from org.apache.lucene.document import Document, Field, FieldType
 from org.apache.lucene.index import FieldInfo, IndexWriter, IndexWriterConfig
 from org.apache.lucene.store import SimpleFSDirectory
 from org.apache.lucene.util import Version
+
+from corpus import Corpus
+from stanford_corpus_reader import StanfordCorpusReader
 
 
 class Ticker(object):
@@ -35,6 +37,7 @@ class IndexDocs(object):
         if not os.path.exists(storeDir):
             os.mkdir(storeDir)
 
+        self.wiki_reader = StanfordCorpusReader(WIKI_ROOT)
         store = SimpleFSDirectory(File(storeDir))
         analyzer = LimitTokenCountAnalyzer(analyzer, 1048576)
         config = IndexWriterConfig(Version.LUCENE_CURRENT, analyzer)
@@ -75,6 +78,8 @@ class IndexDocs(object):
             doc.add(Field("category", ii['category'], t1))
             doc.add(Field("position", ii['Sentence Position'], t1))
             doc.add(Field("question", ii['Question Text'], t2))
+            doc.add(Field("wiki_plain",
+                          self.wiki_reader.get_text(ii['Answer']), t2))
             writer.addDocument(doc)
 
 

@@ -34,7 +34,7 @@ class SimilarToThis():
         self.mlt.setMinDocFreq(1)
         self.mlt.setAnalyzer(StandardAnalyzer(Version.LUCENE_CURRENT))
 
-    def getTopNSimilarToThis(self, question, topN=0, field=["question"],
+    def getTopNSimilarToThis(self, question, field, topN=0,
                              max=MAX_RESULT, path=INDEX_DIR):
         if topN == 0:
             topN = self.numDocs
