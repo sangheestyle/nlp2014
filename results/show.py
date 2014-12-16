@@ -41,7 +41,40 @@ def gen_analysis(files, filter_by="category"):
 
     # making dataframe
     df = pd.DataFrame(submissions).T
+
     return df
+
+def get_difference(p1, p2):
+    """
+    Give you two list of difference between two points
+    """
+    est = 'Estimation'
+    qid = 'Question ID'
+    ans = 'Answer'
+
+    p1_sub = pd.read_csv(p1, names=[qid , est], index_col=qid,  header=0)
+    p1_sub.sort_index(inplace=True)
+    p2_sub = pd.read_csv(p2, names=[qid, est], index_col=qid,  header=0)
+    p2_sub.sort_index(inplace=True)
+
+    df1 = p1_sub[master_set[ans]==p1_sub[est]]
+    df2 = p2_sub[master_set[ans]==p2_sub[est]]
+
+    ds1 = set([tuple([index, row[est]]) for index, row in df1.iterrows()])
+    ds2 = set([tuple([index, row[est]]) for index, row in df2.iterrows()])
+
+    worse_list = list(ds1.difference(ds2))
+    better_list = list(ds2.difference(ds1))
+
+    print ">>> better:", p1, p2
+    for ii in better_list:
+        print ii
+
+    print ">>> worse:", p1, p2
+    for ii in worse_list:
+        print ii
+
+    return better_list, worse_list
 
 
 if __name__ == "__main__":
@@ -64,12 +97,14 @@ if __name__ == "__main__":
     master_set = answer_key.join(test_set)
     master_set.sort_index(inplace=True)
 
-    df_by_category = gen_analysis(submission_files, filter_by='category')
-    df_by_position = gen_analysis(submission_files,
-                                  filter_by="Sentence Position")
+    #df_by_category = gen_analysis(submission_files, filter_by='category')
+    #df_by_position = gen_analysis(submission_files,
+    #                              filter_by="Sentence Position")
 
     # with from 0.0 to 1.0
     # ax = df.plot(ylim=(0,1), marker='x')
-    df_by_category.plot(figsize=(12, 10), marker='o')
-    df_by_position.plot(figsize=(12, 10), marker='o')
+    #df_by_category.plot(figsize=(12, 10), marker='o')
+    #df_by_position.plot(figsize=(12, 10), marker='o')
     # plt.show()
+
+    get_difference(submission_files[0], submission_files[1])
