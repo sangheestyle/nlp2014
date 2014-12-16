@@ -66,6 +66,11 @@ def get_difference(p1, p2):
     worse_list = list(ds1.difference(ds2))
     better_list = list(ds2.difference(ds1))
 
+    worse_list = [[ii[0]] + master_set.loc[ii[0]].tolist()\
+                  for ii in worse_list]
+    better_list = [[ii[0]] + master_set.loc[ii[0]].tolist()\
+                   for ii in better_list]
+
     print ">>> better:", p1, p2
     for ii in better_list:
         print ii
@@ -107,4 +112,4 @@ if __name__ == "__main__":
     #df_by_position.plot(figsize=(12, 10), marker='o')
     # plt.show()
 
-    get_difference(submission_files[0], submission_files[1])
+    get_difference(submission_files[2], submission_files[3])
