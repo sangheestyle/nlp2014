@@ -12,7 +12,7 @@ def gen_analysis(files, filter_by="category"):
             sentence_position
     """
     submissions = {}
-    for ii in submission_files:
+    for ii in files:
         submission_date = ii.split('_')[1]
         print ">>> ", submission_date, filter_by
         submission = pd.read_csv(ii, names=['Question ID', 'Estimation'],
