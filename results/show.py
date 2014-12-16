@@ -22,7 +22,8 @@ def gen_analysis(files, filter_by="category"):
         # accuracy of each category per submission
         num_items_cat = master_set.groupby(filter_by).size()
         is_correct = master_set['Answer'] == submission['Estimation']
-        num_correct_items_cat = master_set[is_correct].groupby(filter_by).size()
+        num_correct_items_cat = \
+            master_set[is_correct].groupby(filter_by).size()
         category_accuracy = num_correct_items_cat / num_items_cat
 
         # accuracy of submission
@@ -57,7 +58,9 @@ if __name__ == "__main__":
     # read base date
     test_set = pd.read_csv(test_set_path, index_col='Question ID',
                            usecols=[0, 3, 5], header=0)
-    answer_key = pd.read_csv(answer_key_path, index_col='Question ID', header=0)
+    answer_key = pd.read_csv(answer_key_path,
+                             index_col='Question ID',
+                             header=0)
     master_set = answer_key.join(test_set)
     master_set.sort_index(inplace=True)
 
